@@ -21,7 +21,6 @@ libkqueue_la_SOURCES = \
        src/linux/write.c \
        src/linux/user.c \
        src/linux/vnode.c \
-       src/linux/signal.c \
        src/linux/timer.c \
        src/common/alloc.h \
        src/common/debug.h \
@@ -30,7 +29,11 @@ libkqueue_la_SOURCES = \
        src/common/tree.h \
        src/linux/platform.h
 
-libkqueue_la_LIBADD = -lpthread -lrt
+if HAVE_SYS_SIGNALFD_H
+libkqueue_la_SOURCES += src/linux/signal.c 
+else
+libkqueue_la_SOURCES += src/posix/signal.c
+endif
 
 pkgconfigdir=$(libdir)/pkgconfig
 pkgconfig_DATA=libkqueue.pc
@@ -53,6 +56,6 @@ kqtest_SOURCES = \
 
 kqtest_CFLAGS = -g -O0 -Wall -Werror -I./include -I./test
 
-kqtest_LDADD = -lpthread -lrt libkqueue.la
+kqtest_LDADD = libkqueue.la
 
 
