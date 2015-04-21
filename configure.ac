@@ -16,7 +16,7 @@ AC_CHECK_DECL([ppoll], [], [], [[
 #define _GNU_SOURCE
 #include <poll.h>
 ]])
-AC_CHECK_HEADERS([sys/epoll.h sys/inotify.h sys/signalfd.h sys/timerfd.h sys/eventfd.h])
+AC_CHECK_HEADERS([sys/epoll.h sys/inotify.h sys/signalfd.h sys/timerfd.h sys/eventfd.h asm/unistd_32.h])
 AM_CONDITIONAL(HAVE_SYS_SIGNALFD_H, test "x$HAVE_SYS_SIGNALFD_H" = "xyes")
 ACX_PTHREAD()
 AC_CHECK_LIB([rt], clock_gettime)

@@ -24,8 +24,10 @@
 #define __NR_timerfd_create             (__NR_SYSCALL_BASE+350)
 #define __NR_timerfd_settime            (__NR_SYSCALL_BASE+353)
 #define __NR_timerfd_gettime            (__NR_SYSCALL_BASE+354)
-#else
-#error Unsupported architecture, need to get the syscall numbers
+#endif
+
+#ifdef HAVE_ASM_UNISTD_32_H
+#include <asm/unistd_32.h>
 #endif
 
 #define SYS_timerfd_create __NR_timerfd_create

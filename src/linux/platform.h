@@ -42,7 +42,9 @@ struct filter;
 /*
  * Get the current thread ID
  */
+#ifndef _GNU_SOURCE
 # define _GNU_SOURCE
+#endif
 # include <linux/unistd.h>
 # include <unistd.h>
 #ifndef __ANDROID__
