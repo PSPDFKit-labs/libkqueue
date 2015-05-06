@@ -103,4 +103,6 @@ int     linux_fd_to_path(char *, size_t, int);
 int     epoll_update(int, struct filter *, struct knote *, struct epoll_event *);
 char *  epoll_event_dump(struct epoll_event *);
 
+extern void clang_tls_workaround_init();
+
 #endif  /* ! _KQUEUE_LINUX_PLATFORM_H */

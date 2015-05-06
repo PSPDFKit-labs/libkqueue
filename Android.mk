@@ -5,7 +5,8 @@ LOCAL_MODULE		:= libkqueue
 LOCAL_C_INCLUDES	:= $(LOCAL_PATH)/src/common \
 					   $(LOCAL_PATH)/android \
 					   $(LOCAL_PATH)/include
-LOCAL_CFLAGS		:= -std=c99 -D_XOPEN_SOURCE=600 -fvisibility=hidden
+LOCAL_CFLAGS		:= -std=c99 -D_XOPEN_SOURCE=600 -fvisibility=hidden -DCLANG_TLS_WORKAROUND
+NDK_APP_CFLAGS		+= -DNDEBUG -Os -g0
 LOCAL_SRC_FILES		:=  \
 	src/common/filter.c \
     src/common/knote.c \

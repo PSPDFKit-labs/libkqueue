@@ -28,6 +28,7 @@
 
 #include "private.h"
 
+#ifndef CLANG_TLS_WORKAROUND
 static const char *
 kevent_filter_dump(const struct kevent *kev)
 {
@@ -114,6 +115,7 @@ kevent_dump(const struct kevent *kev)
 
     return ((const char *) &buf[0]);
 }
+#endif
 
 static int
 kevent_copyin_one(struct kqueue *kq, const struct kevent *src)
@@ -131,7 +133,9 @@ kevent_copyin_one(struct kqueue *kq, const struct kevent *src)
     if (filter_lookup(&filt, kq, src->filter) < 0) 
         return (-1);
 
+#ifndef CLANG_TLS_WORKAROUND
     dbg_printf("src=%s", kevent_dump(src));
+#endif
 
     kn = knote_lookup(filt, src->ident);
     dbg_printf("knote_lookup: ident %d == %p", (int)src->ident, kn);
@@ -152,7 +156,10 @@ kevent_copyin_one(struct kqueue *kq, const struct kevent *src)
                 return (-1);
             } 
             knote_insert(filt, kn);
+
+#ifndef CLANG_TLS_WORKAROUND
             dbg_printf("created kevent %s", kevent_dump(src));
+#endif
 
 /* XXX- FIXME Needs to be handled in kn_create() to prevent races */
             if (src->flags & EV_DISABLE) {
@@ -295,6 +302,7 @@ kevent(int kqfd, const struct kevent *changelist, int nchanges,
         }
     }
 
+#ifndef CLANG_TLS_WORKAROUND
 #ifndef NDEBUG
     if (DEBUG_KQUEUE) {
         int n;
@@ -304,6 +312,7 @@ kevent(int kqfd, const struct kevent *changelist, int nchanges,
 	    dbg_printf("(%u) eventlist[%d] = %s", myid, n, kevent_dump(&eventlist[n]));
         }
     }
+#endif
 #endif
 
 out:

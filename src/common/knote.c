@@ -21,13 +21,10 @@
 
 #include "private.h"
 
-#include "alloc.h"
-
 int
 knote_init(void)
 {
     return 0;
-//    return (mem_init(sizeof(struct knote), 1024));
 }
 
 static int

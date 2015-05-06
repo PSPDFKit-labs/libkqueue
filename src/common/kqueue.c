@@ -87,6 +87,10 @@ libkqueue_init(void)
     }
 #endif
 
+#ifdef CLANG_TLS_WORKAROUND
+    clang_tls_workaround_init();
+#endif
+
    kqmap = map_new(get_fd_limit()); // INT_MAX
    if (kqmap == NULL)
        abort(); 

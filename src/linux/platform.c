@@ -21,12 +21,6 @@
 //XXX-FIXME TEMP
 const struct filter evfilt_proc = EVFILT_NOTIMPL;
 
-/*
- * Per-thread epoll event buffer used to ferry data between
- * kevent_wait() and kevent_copyout().
- */
-static __thread struct epoll_event epevt[MAX_KEVENT];
-
 const struct kqueue_vtable kqops = {
     linux_kqueue_init,
     linux_kqueue_free,
@@ -40,6 +34,43 @@ const struct kqueue_vtable kqops = {
     linux_eventfd_lower,
     linux_eventfd_descriptor
 };
+
+#ifndef CLANG_TLS_WORKAROUND
+
+/*
+ * Per-thread epoll event buffer used to ferry data between
+ * kevent_wait() and kevent_copyout().
+ */
+static __thread struct epoll_event epevt[MAX_KEVENT];
+
+#else
+
+pthread_key_t epoll_data_key;
+pthread_mutex_t epoll_data_mutex;
+
+void clang_tls_workaround_init() {
+    if (pthread_key_create(&epoll_data_key, free) != 0) {
+        abort();
+    }
+    
+    if (pthread_mutex_init(&epoll_data_mutex, NULL) != 0) {
+        abort();
+    }
+}
+
+static struct epoll_event *thread_specific_epoll_event_data() {
+    pthread_mutex_lock(&epoll_data_mutex);
+
+    struct epoll_event *epoll_data = pthread_getspecific(epoll_data_key);
+    if (epoll_data == NULL) {
+        epoll_data = calloc(MAX_KEVENT, sizeof(struct epoll_event));
+        pthread_setspecific(epoll_data_key, epoll_data);
+    }
+    pthread_mutex_unlock(&epoll_data_mutex);
+    return epoll_data;
+}
+
+#endif
 
 int
 linux_kqueue_init(struct kqueue *kq)
@@ -55,7 +86,7 @@ linux_kqueue_init(struct kqueue *kq)
         return (-1);
     }
 
-
+   
  #if DEADWOOD
     //might be useful in posix
 
@@ -151,6 +182,9 @@ linux_kevent_wait(
     }
 
     dbg_puts("waiting for events");
+#ifdef CLANG_TLS_WORKAROUND
+    struct epoll_event *epevt = thread_specific_epoll_event_data();
+#endif
     nret = epoll_wait(kqueue_epfd(kq), &epevt[0], nevents, timeout);
     if (nret < 0) {
         dbg_perror("epoll_wait");
@@ -168,6 +202,10 @@ linux_kevent_copyout(struct kqueue *kq, int nready,
     struct filter *filt;
     struct knote *kn;
     int i, nret, rv;
+
+#ifdef CLANG_TLS_WORKAROUND
+    struct epoll_event *epevt = thread_specific_epoll_event_data();
+#endif
 
     nret = nready;
     for (i = 0; i < nready; i++) {
@@ -340,6 +378,8 @@ linux_get_descriptor_type(struct knote *kn)
     }
 }
 
+
+#ifndef CLANG_TLS_WORKAROUND
 char *
 epoll_event_dump(struct epoll_event *evt)
 {
@@ -365,12 +405,16 @@ epoll_event_dump(struct epoll_event *evt)
     return (&buf[0]);
 #undef EPEVT_DUMP
 }
+#endif
 
 int
 epoll_update(int op, struct filter *filt, struct knote *kn, struct epoll_event *ev)
 {
+
+#ifndef CLANG_TLS_WORKAROUND
     dbg_printf("op=%d fd=%d events=%s", op, (int)kn->kev.ident, 
             epoll_event_dump(ev));
+#endif
     if (epoll_ctl(filter_epfd(filt), op, kn->kev.ident, ev) < 0) {
         dbg_printf("epoll_ctl(2): %s", strerror(errno));
         return (-1);

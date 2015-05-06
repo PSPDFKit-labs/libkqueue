@@ -35,7 +35,9 @@ evfilt_socket_copyout(struct kevent *dst, struct knote *src, void *ptr)
 {
     struct epoll_event * const ev = (struct epoll_event *) ptr;
 
+#ifndef CLANG_TLS_WORKAROUND
     epoll_event_dump(ev);
+#endif
     memcpy(dst, &src->kev, sizeof(*dst));
 #if defined(HAVE_EPOLLRDHUP)
     if (ev->events & EPOLLRDHUP || ev->events & EPOLLHUP)
